@@ -17,8 +17,12 @@ import (
 func main() {
 
 	var finalFs pathfs.FileSystem
-	orig := flag.Arg(1)
+
 	other := flag.Bool("allow-other", false, "mount with -o allowother.")
+
+	flag.Parse()
+	mountPoint := flag.Arg(0)
+	orig := flag.Arg(1)
 
 	event.StartListening()
 
@@ -33,7 +37,7 @@ func main() {
 
 	pathFs := pathfs.NewPathNodeFs(finalFs, nil)
 	conn := nodefs.NewFileSystemConnector(pathFs, opts)
-	mountPoint := flag.Arg(0)
+
 	mOpts := &fuse.MountOptions{
 		AllowOther: *other,
 	}
@@ -42,7 +46,8 @@ func main() {
 		fmt.Printf("Mount fail: %v\n", err)
 		os.Exit(1)
 	}
-	state.SetDebug(true)
+
+	state.SetDebug(false)
 
 	fmt.Println("Mounted!")
 	state.Serve()

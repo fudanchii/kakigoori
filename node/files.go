@@ -69,7 +69,6 @@ func (f *AzukiFile) Flush() fuse.Status {
 
 	err = syscall.Close(newFd)
 
-	go event.Notify("flush", f.File.Name())
 	return fuse.ToStatus(err)
 }
 
@@ -114,7 +113,6 @@ func (f *AzukiFile) GetAttr(a *fuse.Attr) fuse.Status {
 		return fuse.ToStatus(err)
 	}
 	a.FromStat(&st)
-	go event.Notify("getattr", f.File.Name())
 	return fuse.OK
 }
 
