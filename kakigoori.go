@@ -4,10 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
-	"gihtub.com/hanwen/go-fuse/fuse/pathfs"
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
+	"github.com/hanwen/go-fuse/fuse/pathfs"
 
 	"github.com/fudanchii/kakigoori/event"
 	"github.com/fudanchii/kakigoori/fs"
@@ -17,6 +18,7 @@ func main() {
 
 	var finalFs pathfs.FileSystem
 	orig := flag.Arg(1)
+	other := flag.Bool("allow-other", false, "mount with -o allowother.")
 
 	event.StartListening()
 
@@ -40,7 +42,7 @@ func main() {
 		fmt.Printf("Mount fail: %v\n", err)
 		os.Exit(1)
 	}
-	state.SetDebug(*debug)
+	state.SetDebug(true)
 
 	fmt.Println("Mounted!")
 	state.Serve()

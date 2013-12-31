@@ -11,7 +11,7 @@ func StartListening() {
 	handler = &Handler{
 		Chan: make(chan *Intent, 128),
 	}
-    go handler.StartProcessing()
+	go handler.StartProcessing()
 }
 
 func Notify(name string, filename string) {
