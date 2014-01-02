@@ -42,8 +42,6 @@ func (fs *KakigooriFileSystem) GetAttr(name string, context *fuse.Context) (a *f
 	var err error = nil
 	st := syscall.Stat_t{}
 	if name == "" {
-		// When GetAttr is called for the toplevel directory, we always want
-		// to look through symlinks.
 		err = syscall.Stat(fullPath, &st)
 	} else {
 		err = syscall.Lstat(fullPath, &st)
@@ -58,8 +56,6 @@ func (fs *KakigooriFileSystem) GetAttr(name string, context *fuse.Context) (a *f
 }
 
 func (fs *KakigooriFileSystem) OpenDir(name string, context *fuse.Context) (stream []fuse.DirEntry, status fuse.Status) {
-	// What other ways beyond O_RDONLY are there to open
-	// directories?
 	fullPath := fs.GetPath(name)
 	f, err := os.Open(fullPath)
 	if err != nil {
@@ -70,7 +66,7 @@ func (fs *KakigooriFileSystem) OpenDir(name string, context *fuse.Context) (stre
 	for {
 		infos, err := f.Readdir(want)
 		for i := range infos {
-			// workaround forhttps://code.google.com/p/go/issues/detail?id=5960
+			// workaround for https://code.google.com/p/go/issues/detail?id=5960
 			if infos[i] == nil {
 				continue
 			}
@@ -94,7 +90,7 @@ func (fs *KakigooriFileSystem) OpenDir(name string, context *fuse.Context) (stre
 		}
 	}
 	f.Close()
-	go event.Notify("fs:opendir", fullPath)
+	go event.Notify("opendir", fullPath)
 	return output, fuse.OK
 }
 
@@ -104,26 +100,26 @@ func (fs *KakigooriFileSystem) Open(name string, flags uint32, context *fuse.Con
 	if err != nil {
 		return nil, fuse.ToStatus(err)
 	}
-	go event.Notify("fs:open", fullPath)
+	go event.Notify("open", fullPath)
 	return node.NewAzukiFile(f), fuse.OK
 }
 
 func (fs *KakigooriFileSystem) Chmod(path string, mode uint32, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(path)
 	err := os.Chmod(fullPath, os.FileMode(mode))
-	go event.Notify("fs:chmod", fullPath)
+	go event.Notify("chmod", fullPath)
 	return fuse.ToStatus(err)
 }
 
 func (fs *KakigooriFileSystem) Chown(path string, uid uint32, gid uint32, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(path)
-	go event.Notify("fs:chown", fullPath)
+	go event.Notify("chown", fullPath)
 	return fuse.ToStatus(os.Chown(fullPath, int(uid), int(gid)))
 }
 
 func (fs *KakigooriFileSystem) Truncate(path string, offset uint64, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(path)
-	go event.Notify("fs:trunc", fullPath)
+	go event.Notify("trunc", fullPath)
 	return fuse.ToStatus(os.Truncate(fullPath, int64(offset)))
 }
 
@@ -143,39 +139,38 @@ func (fs *KakigooriFileSystem) Utimens(path string, Atime *time.Time, Mtime *tim
 func (fs *KakigooriFileSystem) Readlink(name string, context *fuse.Context) (out string, code fuse.Status) {
 	fullPath := fs.GetPath(name)
 	f, err := os.Readlink(fullPath)
-	go event.Notify("fs:readlink", fullPath)
+	go event.Notify("readlink", fullPath)
 	return f, fuse.ToStatus(err)
 }
 
 func (fs *KakigooriFileSystem) Mknod(name string, mode uint32, dev uint32, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(name)
-	go event.Notify("fs:mknod", fullPath)
+	go event.Notify("mknod", fullPath)
 	return fuse.ToStatus(syscall.Mknod(fullPath, mode, int(dev)))
 }
 
 func (fs *KakigooriFileSystem) Mkdir(path string, mode uint32, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(path)
-	go event.Notify("fs:mkdir", fullPath)
+	go event.Notify("mkdir", fullPath)
 	return fuse.ToStatus(os.Mkdir(fullPath, os.FileMode(mode)))
 }
 
-// Don't use os.Remove, it removes twice (unlink followed by rmdir).
 func (fs *KakigooriFileSystem) Unlink(name string, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(name)
-	go event.Notify("fs:unlink", fullPath)
+	go event.Notify("unlink", fullPath)
 	return fuse.ToStatus(syscall.Unlink(fullPath))
 }
 
 func (fs *KakigooriFileSystem) Rmdir(name string, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(name)
-	go event.Notify("fs:rmdir", fullPath)
+	go event.Notify("rmdir", fullPath)
 	return fuse.ToStatus(syscall.Rmdir(fullPath))
 }
 
 func (fs *KakigooriFileSystem) Symlink(pointedTo string, linkName string, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(pointedTo)
 	linkPath := fs.GetPath(linkName)
-	go event.Notify("fs:symlink", fmt.Sprintf("%s -> %s", fullPath, linkPath))
+	go event.Notify("symlink", fmt.Sprintf("%s -> %s", fullPath, linkPath))
 	return fuse.ToStatus(os.Symlink(pointedTo, linkPath))
 }
 
@@ -183,27 +178,27 @@ func (fs *KakigooriFileSystem) Rename(oldPath string, newPath string, context *f
 	fullOldPath := fs.GetPath(oldPath)
 	fullNewPath := fs.GetPath(newPath)
 	err := os.Rename(fullOldPath, fullNewPath)
-	go event.Notify("fs:rename", fmt.Sprintf("%s -> %s", fullOldPath, fullNewPath))
+	go event.Notify("rename", fmt.Sprintf("%s -> %s", fullOldPath, fullNewPath))
 	return fuse.ToStatus(err)
 }
 
 func (fs *KakigooriFileSystem) Link(orig string, newName string, context *fuse.Context) (code fuse.Status) {
 	fullOrig := fs.GetPath(orig)
 	fullNewName := fs.GetPath(newName)
-	go event.Notify("fs:link", fmt.Sprintf("%s -> %s", fullOrig, fullNewName))
+	go event.Notify("link", fmt.Sprintf("%s -> %s", fullOrig, fullNewName))
 	return fuse.ToStatus(os.Link(fullOrig, fullNewName))
 }
 
 func (fs *KakigooriFileSystem) Access(name string, mode uint32, context *fuse.Context) (code fuse.Status) {
 	fullPath := fs.GetPath(name)
-	go event.Notify("fs:access", fullPath)
+	go event.Notify("access", fullPath)
 	return fuse.ToStatus(syscall.Access(fullPath, mode))
 }
 
 func (fs *KakigooriFileSystem) Create(path string, flags uint32, mode uint32, context *fuse.Context) (fuseFile nodefs.File, code fuse.Status) {
 	fullPath := fs.GetPath(path)
 	f, err := os.OpenFile(fullPath, int(flags)|os.O_CREATE, os.FileMode(mode))
-	go event.Notify("fs:create", fullPath)
+	go event.Notify("create", fullPath)
 	return node.NewAzukiFile(f), fuse.ToStatus(err)
 }
 
@@ -236,7 +231,7 @@ func (fs *KakigooriFileSystem) RemoveXAttr(name string, attr string, context *fu
 }
 
 func (fs *KakigooriFileSystem) String() string {
-	return fmt.Sprintf("LoopbackFs(%s)", fs.Root)
+	return fmt.Sprintf("KakigooriFs(%s)", fs.Root)
 }
 
 func (fs *KakigooriFileSystem) GetXAttr(name string, attr string, context *fuse.Context) ([]byte, fuse.Status) {

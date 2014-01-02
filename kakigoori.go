@@ -1,8 +1,7 @@
 package main
 
 import (
-	"flag"
-	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -18,15 +17,14 @@ func main() {
 
 	var finalFs pathfs.FileSystem
 
-	other := flag.Bool("allow-other", false, "mount with -o allowother.")
-
-	flag.Parse()
-	mountPoint := flag.Arg(0)
-	orig := flag.Arg(1)
+	config, err := parseConfig("config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	event.StartListening()
 
-	kakigoorifs := fs.NewKakigooriFileSystem(orig)
+	kakigoorifs := fs.NewKakigooriFileSystem(config.Root)
 	finalFs = kakigoorifs
 
 	opts := &nodefs.Options{
@@ -39,17 +37,17 @@ func main() {
 	conn := nodefs.NewFileSystemConnector(pathFs, opts)
 
 	mOpts := &fuse.MountOptions{
-		AllowOther: *other,
+		AllowOther: false,
 	}
-	state, err := fuse.NewServer(conn.RawFS(), mountPoint, mOpts)
+	state, err := fuse.NewServer(conn.RawFS(), config.MountPoint, mOpts)
 	if err != nil {
-		fmt.Printf("Mount fail: %v\n", err)
+		log.Printf("Mount fail: %v\n", err)
 		os.Exit(1)
 	}
 
 	state.SetDebug(false)
 
-	fmt.Println("Mounted!")
+	log.Println("Mounted!")
 	state.Serve()
 
 }
