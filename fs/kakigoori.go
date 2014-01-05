@@ -14,7 +14,6 @@ import (
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 
 	"github.com/fudanchii/kakigoori/event"
-	"github.com/fudanchii/kakigoori/node"
 )
 
 type KakigooriFileSystem struct {
@@ -101,7 +100,7 @@ func (fs *KakigooriFileSystem) Open(name string, flags uint32, context *fuse.Con
 		return nil, fuse.ToStatus(err)
 	}
 	go event.Notify(event.Open, fullPath)
-	return node.NewAzukiFile(f), fuse.OK
+	return NewAzukiFile(f), fuse.OK
 }
 
 func (fs *KakigooriFileSystem) Chmod(path string, mode uint32, context *fuse.Context) (code fuse.Status) {
@@ -199,7 +198,7 @@ func (fs *KakigooriFileSystem) Create(path string, flags uint32, mode uint32, co
 	fullPath := fs.GetPath(path)
 	f, err := os.OpenFile(fullPath, int(flags)|os.O_CREATE, os.FileMode(mode))
 	go event.Notify(event.Create, fullPath)
-	return node.NewAzukiFile(f), fuse.ToStatus(err)
+	return NewAzukiFile(f), fuse.ToStatus(err)
 }
 
 func (fs *KakigooriFileSystem) StatFs(name string) *fuse.StatfsOut {
