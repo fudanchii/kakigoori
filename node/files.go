@@ -39,7 +39,7 @@ func (f *AzukiFile) Read(buf []byte, off int64) (res fuse.ReadResult, code fuse.
 	f.lock.Lock()
 	r := fuse.ReadResultFd(f.File.Fd(), off, len(buf))
 	f.lock.Unlock()
-	go event.Notify("read", f.File.Name())
+	go event.Notify(event.Read, f.File.Name())
 	return r, fuse.OK
 }
 
@@ -47,12 +47,12 @@ func (f *AzukiFile) Write(data []byte, off int64) (uint32, fuse.Status) {
 	f.lock.Lock()
 	n, err := f.File.WriteAt(data, off)
 	f.lock.Unlock()
-	go event.Notify("write", f.File.Name())
+	go event.Notify(event.Write, f.File.Name())
 	return uint32(n), fuse.ToStatus(err)
 }
 
 func (f *AzukiFile) Release() {
-	go event.Notify("close", f.File.Name())
+	go event.Notify(event.Close, f.File.Name())
 	f.lock.Lock()
 	f.File.Close()
 	f.lock.Unlock()
@@ -76,7 +76,7 @@ func (f *AzukiFile) Fsync(flags int) (code fuse.Status) {
 	f.lock.Lock()
 	r := fuse.ToStatus(syscall.Fsync(int(f.File.Fd())))
 	f.lock.Unlock()
-	go event.Notify("fsync", f.File.Name())
+	go event.Notify(event.Fsync, f.File.Name())
 	return r
 }
 
@@ -84,7 +84,7 @@ func (f *AzukiFile) Truncate(size uint64) fuse.Status {
 	f.lock.Lock()
 	r := fuse.ToStatus(syscall.Ftruncate(int(f.File.Fd()), int64(size)))
 	f.lock.Unlock()
-	go event.Notify("trunc", f.File.Name())
+	go event.Notify(event.Trunc, f.File.Name())
 	return r
 }
 
@@ -92,7 +92,7 @@ func (f *AzukiFile) Chmod(mode uint32) fuse.Status {
 	f.lock.Lock()
 	r := fuse.ToStatus(f.File.Chmod(os.FileMode(mode)))
 	f.lock.Unlock()
-	go event.Notify("chmod", f.File.Name())
+	go event.Notify(event.Chmod, f.File.Name())
 	return r
 }
 
@@ -100,7 +100,7 @@ func (f *AzukiFile) Chown(uid uint32, gid uint32) fuse.Status {
 	f.lock.Lock()
 	r := fuse.ToStatus(f.File.Chown(int(uid), int(gid)))
 	f.lock.Unlock()
-	go event.Notify("chown", f.File.Name())
+	go event.Notify(event.Chown, f.File.Name())
 	return r
 }
 
@@ -123,7 +123,7 @@ func (f *AzukiFile) Allocate(off uint64, sz uint64, mode uint32) fuse.Status {
 	if err != nil {
 		return fuse.ToStatus(err)
 	}
-	go event.Notify("fallocate", f.File.Name())
+	go event.Notify(event.Fallocate, f.File.Name())
 	return fuse.OK
 }
 

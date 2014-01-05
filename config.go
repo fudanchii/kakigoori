@@ -20,7 +20,7 @@ func parseConfig(cfgfile string) (*config, error) {
 	}
 
 	defer file.Close()
-	n, err := file.Read(jsonStr);
+	n, err := file.Read(jsonStr)
 	if err != nil {
 		return nil, err
 	}

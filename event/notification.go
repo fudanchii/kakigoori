@@ -1,8 +1,8 @@
 package event
 
 type Intent struct {
-	Name string
-	File string
+	EventId  byte
+	FileName string
 }
 
 var handler *Handler = nil
@@ -14,9 +14,9 @@ func StartListening() {
 	go handler.StartProcessing()
 }
 
-func Notify(name string, filename string) {
+func Notify(id byte, filename string) {
 	handler.Chan <- &Intent{
-		Name: name,
-		File: filename,
+		EventId:  id,
+		FileName: filename,
 	}
 }
