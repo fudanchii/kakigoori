@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -13,11 +15,21 @@ import (
 	"github.com/fudanchii/kakigoori/fs"
 )
 
+var (
+	APPNAME    = "kakigoori"
+	APPVERSION = "0.1-norev"
+	configPath = flag.String("c", "config.json", "Config file to use.")
+	flVersion  = flag.Bool("v", false, "Display application version.")
+)
+
 func main() {
+
+	flag.Parse()
+	check_intro()
 
 	var finalFs pathfs.FileSystem
 
-	config, err := parseConfig("config.json")
+	config, err := parseConfig(*configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,4 +62,15 @@ func main() {
 	log.Println("Mounted!")
 	state.Serve()
 
+}
+
+func check_intro() {
+	if *flVersion {
+		show_version()
+		os.Exit(1)
+	}
+}
+
+func show_version() {
+	fmt.Printf("%s %s\n", APPNAME, APPVERSION)
 }
