@@ -34,7 +34,7 @@ func main() {
 	}
 
 	pathFs := pathfs.NewPathNodeFs(finalFs, nil)
-	conn := nodefs.NewFileSystemConnector(pathFs, opts)
+	conn := nodefs.NewFileSystemConnector(pathFs.Root(), opts)
 
 	mOpts := &fuse.MountOptions{
 		AllowOther: false,
