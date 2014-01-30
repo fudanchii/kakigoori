@@ -34,6 +34,16 @@ const (
 	Access
 )
 
+type HandlerFunction func(*Intent, Config)
+
+type EventMap map[string]HandlerFunction
+
+type Handler struct {
+	Chan chan *Intent
+	Config
+	EventMap
+}
+
 var EventName [21]string = [21]string{
 	"unknown",
 	"open", "read", "write", "fsync", "close",
@@ -44,23 +54,27 @@ var EventName [21]string = [21]string{
 	"mknod", "fallocate", "access",
 }
 
-type handlerFunction func(*Intent)
+var handler *Handler
 
-type EventMap map[string]handlerFunction
-
-func (evMap *EventMap) RegisterHandler(events []byte, fn handlerFunction) {
-	(*evMap)[string(events)] = fn
+func StartListening(config Config) *Handler {
+	handler = &Handler{
+		Chan:     make(chan *Intent, 128),
+		EventMap: make(EventMap),
+		Config:   config,
+	}
+	go handler.StartProcessing()
+	return handler
 }
 
-type Handler struct {
-	Chan chan *Intent
-	EventMap
+func (h *Handler) RegisterHandler(events []byte, fn HandlerFunction) {
+	h.EventMap[string(events)] = fn
 }
 
 func (h *Handler) StartProcessing() {
-
 	for intent := range h.Chan {
-		//maybe find some handler first before processing
+		if handler, ok := h.EventMap[string([]byte{intent.EventId})]; ok {
+			handler(intent, h.Config)
+		}
 		log.Printf("> %s\t%s\n", EventName[intent.EventId], intent.FileName)
 	}
 }

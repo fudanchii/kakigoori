@@ -6,8 +6,9 @@ import (
 )
 
 type config struct {
-	Root       string `json:"root"`
-	MountPoint string `json:"mount_point"`
+	Root       string                 `json:"root"`
+	MountPoint string                 `json:"mount_point"`
+	Handlers   map[string]interface{} `json:"handlers"`
 }
 
 func parseConfig(cfgfile string) (*config, error) {

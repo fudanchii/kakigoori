@@ -12,6 +12,7 @@ import (
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 
 	"github.com/fudanchii/kakigoori/event"
+	"github.com/fudanchii/kakigoori/event/handler"
 	"github.com/fudanchii/kakigoori/fs"
 )
 
@@ -34,7 +35,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	event.StartListening()
+	hnd := event.StartListening(config.Handlers)
+	hnd.RegisterHandler([]byte{event.Close}, handler.Spawner)
 
 	kakigoorifs := fs.NewKakigooriFileSystem(config.Root)
 	finalFs = kakigoorifs
