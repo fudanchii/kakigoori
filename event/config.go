@@ -15,7 +15,7 @@ func (cfg *Config) get(key string) Config {
 	return nil
 }
 
-func (cfg *Config) Decode(key string, val interface{}) error {
+func (cfg *Config) Cast(key string, val interface{}) error {
 	if cfgstruct := cfg.get(key); cfgstruct != nil {
 		return mapstructure.Decode(cfgstruct, val)
 	}

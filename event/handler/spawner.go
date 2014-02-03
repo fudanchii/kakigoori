@@ -14,7 +14,7 @@ type SpawnerConfig struct {
 
 func Spawner(intent *event.Intent, config event.Config) {
 	var cfg SpawnerConfig
-	config.Decode("spawner", &cfg)
+	config.Cast("spawner", &cfg)
 	cmd := cfg.Cmd
 	args := append([]string{}, cfg.Args...)
 	args = append(args, intent.FileName, event.EventName[intent.EventId])
