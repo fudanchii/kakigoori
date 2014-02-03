@@ -66,22 +66,13 @@ var EventName = map[uint32]string{
 	Chown: "chown",
 	Trunc: "trunc",
 
-	Opendir: "opendir",
+	OpenDir: "opendir",
 	Mkdir:   "mkdir",
 	Rmdir:   "rmdir",
 
 	Mknod:     "mknod",
 	Fallocate: "fallocate",
 	Access:    "access",
-}
-
-var validEventSequences = map[uint32]bool{
-	(Open | Close):         true,
-	(Open | Read | Close):  true,
-	(Open | Write | Close): true,
-	(Read | Close):         true,
-	(Write | Close):        true,
-	(Create | Close):       true,
 }
 
 var handler *Handler
@@ -98,8 +89,8 @@ func StartListening(config Config) *Handler {
 }
 
 func (h *Handler) RegisterHandler(events uint32, fn HandlerFunction) {
-	if len(events) == 0 {
-		return // Do nothing
+	if events == 0 {
+		return // Nothing
 	}
 	h.EventMap[events] = fn
 }
@@ -113,14 +104,20 @@ func (h *Handler) StartProcessing() {
 		} else {
 			events = intent.EventId
 		}
+
 		if handler, ok := h.EventMap[events]; ok {
 			go handler(intent, h.Config)
 			delete(h.TrackedEvents, intent.FileName)
+		} else if events & (Close|Unlink) > 0 {
+			delete(h.TrackedEvents, intent.FileName)
 		} else {
-			// handler not found, either append this event
-			// or ignore it all the way.
-			// HOW?
-			h.TrackedEvents[intent.FileName] = events
+			for key, _ := range h.EventMap {
+				if events & key > 0 {
+					h.TrackedEvents[intent.FileName] = events
+					log.Printf("%d registered for %s\n", events, intent.FileName)
+					break
+				}
+			}
 		}
 		log.Printf("> %s\t%s\n", EventName[intent.EventId], intent.FileName)
 	}

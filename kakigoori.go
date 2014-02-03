@@ -36,7 +36,7 @@ func main() {
 	}
 
 	hnd := event.StartListening(config.Handlers)
-	hnd.RegisterHandler([]byte{event.Close}, handler.Spawner)
+	hnd.RegisterHandler(event.Write | event.Close, handler.Spawner)
 
 	kakigoorifs := fs.NewKakigooriFileSystem(config.Root)
 	finalFs = kakigoorifs

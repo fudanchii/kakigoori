@@ -1,11 +1,11 @@
 package event
 
 type Intent struct {
-	EventId  byte
+	EventId  uint32
 	FileName string
 }
 
-func Notify(id byte, filename string) {
+func Notify(id uint32, filename string) {
 	handler.Chan <- &Intent{
 		EventId:  id,
 		FileName: filename,
