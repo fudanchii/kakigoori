@@ -108,7 +108,7 @@ func (h *Handler) StartProcessing() {
 		if handler, ok := h.EventMap[events]; ok {
 			go handler(intent, h.Config)
 			delete(h.TrackedEvents, intent.FileName)
-		} else if events & (Close|Unlink) > 0 {
+		} else if events & (Close|Unlink|Rename|Rmdir) > 0 {
 			delete(h.TrackedEvents, intent.FileName)
 		} else {
 			for key, _ := range h.EventMap {
